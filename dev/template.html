@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>料号比对 — 清单与明细表对齐</title>
+<style>
+/*@FONTS@*/
+
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+
+:root{
+  --ink-900:#060C0A;
+  --ink-850:#08110E;
+  --ink-800:#0A1511;
+  --ink-700:#0E1C17;
+  --ink-600:#13251D;
+  --line-soft:rgba(214,240,228,.075);
+  --line:rgba(214,240,228,.14);
+  --line-strong:rgba(214,240,228,.26);
+  --fg:#EAF3EE;
+  --fg-2:#A5BAB0;
+  --fg-3:#6F857A;
+  --jade:#39DDA9;
+  --jade-dim:#1FA37E;
+  --jade-soft:rgba(57,221,169,.12);
+  --jade-line:rgba(57,221,169,.42);
+  --ice:#89A7B8;
+  --sand:#D8C6A4;
+  --warn:#E2A244;
+  --r-xl:22px;
+  --r-lg:16px;
+  --r-md:11px;
+  --r-sm:8px;
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  min-height:100vh;
+  color:var(--fg);
+  font-family:"Space Grotesk","Noto Sans SC","Microsoft YaHei","PingFang SC",system-ui,sans-serif;
+  font-size:15px;
+  line-height:1.62;
+  letter-spacing:.005em;
+  background:
+    radial-gradient(1180px 760px at 84% -12%, rgba(57,221,169,.145), transparent 62%),
+    radial-gradient(900px 640px at -2% 104%, rgba(137,167,184,.10), transparent 58%),
+    var(--ink-900);
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
+body::after{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.055;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode:overlay;
+}
+.wrap{position:relative;z-index:1;max-width:1240px;margin:0 auto;padding:0 32px 96px}
+img,svg{display:block}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--jade);outline-offset:3px;border-radius:4px}
+
+/* ---------- 顶部 ---------- */
+.top{
+  display:flex;align-items:center;justify-content:space-between;gap:20px;
+  height:74px;border-bottom:1px solid var(--line-soft);
+  margin:0 -32px 0;padding:0 32px;
+}
+.brand{display:flex;align-items:center;gap:11px;text-decoration:none}
+.brand__mark{width:26px;height:26px;color:var(--jade)}
+.brand__name{font-size:15.5px;font-weight:500;letter-spacing:.01em}
+.brand__dot{width:6px;height:6px;border-radius:50%;background:var(--jade);box-shadow:0 0 0 4px rgba(57,221,169,.13)}
+.top__note{margin:0;font-size:13px;color:var(--fg-3);display:flex;align-items:center;gap:9px}
+.top__note b{color:var(--fg-2);font-weight:500}
+
+/* ---------- 英雄区 ---------- */
+.hero{padding:76px 0 52px;max-width:880px}
+.hero__title{
+  margin:0;font-size:clamp(38px,5.6vw,70px);line-height:.99;font-weight:500;
+  letter-spacing:-.031em;text-wrap:balance;
+}
+.hero__lead{
+  margin:26px 0 0;max-width:35em;color:var(--fg-2);font-size:16.5px;line-height:1.75;
+}
+.hero__rule{
+  position:relative;height:1px;margin:44px 0 0;max-width:520px;
+  background:linear-gradient(90deg,var(--jade-line),rgba(57,221,169,.06) 42%,transparent);
+}
+.hero__rule::before,.hero__rule::after{
+  content:"";position:absolute;top:-3.5px;width:1px;height:8px;background:var(--jade);opacity:.7;
+}
+.hero__rule::before{left:0;opacity:1}
+.hero__rule::after{left:66%}
+
+/* ---------- 工作台 ---------- */
+.bench{
+  position:relative;border:1px solid var(--line);border-radius:var(--r-xl);
+  background:linear-gradient(168deg,rgba(19,37,29,.92),rgba(9,18,15,.94) 58%);
+  padding:26px;overflow:hidden;
+  box-shadow:0 34px 80px -50px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.035);
+}
+.bench::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(620px 240px at 78% 0%,rgba(57,221,169,.075),transparent 70%);
+}
+.bench__grid{
+  position:relative;display:grid;gap:18px;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) 306px;align-items:stretch;
+}
+
+/* 上传区 */
+.zone{
+  position:relative;display:flex;flex-direction:column;min-height:322px;
+  border:1px solid var(--line-soft);border-radius:var(--r-lg);
+  background:rgba(6,12,10,.42);padding:16px;transition:border-color .25s var(--ease),background .25s var(--ease);
+}
+.zone.is-over{border-color:var(--jade-line);background:rgba(57,221,169,.055)}
+.zone.is-loaded{border-color:rgba(214,240,228,.19);background:rgba(14,28,23,.55)}
+.zone__head{display:flex;align-items:baseline;gap:10px;margin-bottom:14px}
+.zone__no{font-size:12px;color:var(--jade);letter-spacing:.06em;font-variant-numeric:tabular-nums}
+.zone__title{font-size:14px;font-weight:500;color:var(--fg)}
+.zone__spec{margin-left:auto;font-size:12px;color:var(--fg-3);letter-spacing:.02em}
+.zone__body{flex:1;display:flex;flex-direction:column;min-height:0}
+.zone__err{margin:10px 0 0;font-size:13px;line-height:1.6;color:var(--warn);display:flex;gap:8px}
+.zone__err::before{content:"";flex:none;width:3px;border-radius:2px;background:var(--warn);opacity:.8}
+
+.drop{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
+  border:1px dashed var(--line-strong);border-radius:var(--r-md);
+  padding:22px 18px;text-align:center;cursor:pointer;
+  transition:border-color .22s var(--ease),background .22s var(--ease),transform .22s var(--ease);
+}
+.drop:hover{border-color:var(--jade-line);background:rgba(57,221,169,.035)}
+.drop:active{transform:scale(.994)}
+.drop__art{width:96px;height:72px;color:var(--fg-2);margin-bottom:16px;opacity:.95}
+.drop__title{font-size:14px;color:var(--fg);font-weight:500}
+.drop__sub{margin:7px 0 0;font-size:12.5px;line-height:1.65;color:var(--fg-3);max-width:24em}
+
+/* 已载入 */
+.filed{flex:1;display:flex;flex-direction:column;min-height:0;animation:fadeUp .34s var(--ease) both}
+.filed__top{display:flex;align-items:flex-start;gap:10px}
+.filed__name{
+  font-size:14px;font-weight:500;line-height:1.45;word-break:break-all;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.filed__swap{flex:none;margin-left:auto;font-size:12.5px;color:var(--fg-3);border-bottom:1px solid var(--line);padding-bottom:1px;transition:color .2s}
+.filed__swap:hover{color:var(--jade);border-color:var(--jade-line)}
+.filed__meta{display:flex;flex-wrap:wrap;gap:6px 18px;margin:14px 0 0;padding:12px 0 0;border-top:1px solid var(--line-soft)}
+.filed__meta div{display:flex;align-items:baseline;gap:7px}
+.filed__meta dt{font-size:12px;color:var(--fg-3)}
+.filed__meta dd{margin:0;font-size:13.5px;font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;color:var(--fg)}
+.filed__peek{
+  margin:auto 0 0;padding-top:14px;display:flex;flex-wrap:wrap;gap:6px;overflow:hidden;max-height:88px;
+  -webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 20px),transparent);
+  mask-image:linear-gradient(180deg,#000 calc(100% - 20px),transparent);
+}
+.chip{
+  font-size:11.5px;line-height:1;padding:6px 8px;border-radius:6px;
+  background:rgba(214,240,228,.055);color:var(--fg-2);border:1px solid var(--line-soft);
+  font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+.chip--more{color:var(--fg-3);background:none;border-style:dashed}
+.filed__ctl{margin-top:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.mini{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--fg-2);cursor:pointer}
+.mini select{
+  font:inherit;font-size:12.5px;color:var(--fg);background:var(--ink-700);
+  border:1px solid var(--line);border-radius:6px;padding:3px 6px;max-width:150px;
+}
+.mini input{accent-color:var(--jade);width:14px;height:14px;margin:0}
+
+/* 控制台 */
+.console{
+  display:flex;flex-direction:column;gap:0;
+  border:1px solid var(--line-soft);border-radius:var(--r-lg);
+  background:linear-gradient(180deg,rgba(19,37,29,.9),rgba(8,17,14,.6));
+  padding:18px 18px 16px;
+}
+.console__title{margin:0 0 4px;font-size:12.5px;font-weight:500;color:var(--fg-2);letter-spacing:.02em}
+.opt-list{display:flex;flex-direction:column;gap:2px;margin:8px 0 0}
+.opt{
+  display:flex;gap:10px;align-items:flex-start;padding:7px 0;cursor:pointer;
+  transition:opacity .2s;
+}
+.opt input{position:absolute;opacity:0;width:0;height:0}
+.opt__ui{
+  flex:none;width:15px;height:15px;margin-top:3px;border-radius:4px;
+  border:1px solid var(--line-strong);background:rgba(0,0,0,.25);
+  display:grid;place-items:center;transition:background .18s,border-color .18s;
+}
+.opt__ui::after{
+  content:"";width:7px;height:4px;border-left:1.6px solid var(--ink-900);border-bottom:1.6px solid var(--ink-900);
+  transform:rotate(-45deg) scale(.4);opacity:0;transition:opacity .16s,transform .18s var(--ease);margin-top:-1px;
+}
+.opt input:checked + .opt__ui{background:var(--jade);border-color:var(--jade)}
+.opt input:checked + .opt__ui::after{opacity:1;transform:rotate(-45deg) scale(1)}
+.opt input:focus-visible + .opt__ui{outline:2px solid var(--jade);outline-offset:3px}
+.opt__text{display:flex;flex-direction:column;gap:1px;min-width:0}
+.opt__text b{font-weight:400;font-size:13.5px;color:var(--fg)}
+.opt__text em{font-style:normal;font-size:11.5px;line-height:1.5;color:var(--fg-3)}
+.opt--row{align-items:center;padding:6px 0}
+.opt--row .opt__ui{margin-top:0}
+
+.seg{display:flex;gap:4px;margin:14px 0 0;padding:3px;background:rgba(6,12,10,.5);border:1px solid var(--line-soft);border-radius:9px}
+.seg label{
+  flex:1;text-align:center;font-size:12.5px;color:var(--fg-2);padding:6px 4px;border-radius:6px;
+  cursor:pointer;transition:background .18s,color .18s;white-space:nowrap;
+}
+.seg input{position:absolute;opacity:0;width:0}
+.seg label:has(input:checked){background:rgba(57,221,169,.15);color:var(--jade)}
+.seg label:has(input:focus-visible){outline:2px solid var(--jade);outline-offset:2px}
+.seg-cap{margin:8px 0 0;font-size:11.5px;color:var(--fg-3);line-height:1.55}
+
+.console__foot{margin-top:auto;padding-top:16px}
+.cta{
+  width:100%;display:flex;align-items:center;justify-content:center;gap:9px;
+  background:var(--jade);color:#04120D;font-size:14.5px;font-weight:600;letter-spacing:.01em;
+  border-radius:10px;padding:13px 16px;transition:transform .16s var(--ease),box-shadow .22s,background .2s,opacity .2s;
+  box-shadow:0 12px 30px -16px rgba(57,221,169,.75);
+}
+.cta:hover:not(:disabled){background:#4CE7B6;box-shadow:0 16px 34px -14px rgba(57,221,169,.6)}
+.cta:active:not(:disabled){transform:translateY(1px) scale(.996)}
+.cta:disabled{background:rgba(214,240,228,.09);color:var(--fg-3);box-shadow:none;cursor:not-allowed}
+.cta__icon{width:16px;height:16px}
+.console__status{margin:10px 0 0;font-size:12.5px;color:var(--fg-3);text-align:center;line-height:1.5}
+.console__status b{color:var(--jade);font-weight:500}
+
+/* 扫描线 */
+.bench__scan{position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:var(--r-xl);opacity:0}
+.bench.is-busy .bench__scan{opacity:1}
+.bench__scan::before{
+  content:"";position:absolute;top:0;bottom:0;width:34%;
+  background:linear-gradient(90deg,transparent,rgba(57,221,169,.10),rgba(57,221,169,.02));
+  border-right:1px solid rgba(57,221,169,.5);
+  animation:sweep 1.15s var(--ease) infinite;
+}
+
+/* ---------- 结果 ---------- */
+.result{margin-top:34px;animation:fadeUp .5s var(--ease) both}
+.result__bar{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.figs{display:flex;flex-wrap:wrap;gap:12px 46px}
+.fig{display:flex;flex-direction:column;gap:2px}
+.fig__n{
+  font-size:34px;line-height:1.05;font-weight:500;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;
+}
+.fig__n--jade{color:var(--jade)}
+.fig__l{font-size:12.5px;color:var(--fg-3)}
+.cta--sm{width:auto;padding:11px 20px;font-size:14px}
+
+.ruler{position:relative;height:44px;margin:26px 0 0;border-bottom:1px solid var(--line-soft)}
+.ruler__ticks{position:absolute;inset:0 0 auto;height:16px;
+  background-image:
+    repeating-linear-gradient(90deg,rgba(214,240,228,.16) 0 1px,transparent 1px 10px),
+    repeating-linear-gradient(90deg,rgba(214,240,228,.3) 0 1px,transparent 1px 50px);
+  -webkit-mask-image:linear-gradient(90deg,#000 0 92%,transparent);
+  mask-image:linear-gradient(90deg,#000 0 92%,transparent);
+}
+.ruler__fill{
+  position:absolute;left:0;bottom:0;height:2px;width:0;background:linear-gradient(90deg,var(--jade-dim),var(--jade));
+  box-shadow:0 0 14px rgba(57,221,169,.55);transition:width .9s var(--ease);
+}
+.ruler__head{
+  position:absolute;bottom:-1px;left:0;transform:translateX(-1px);
+  transition:left .9s var(--ease);display:flex;flex-direction:column;align-items:flex-start;
+}
+.ruler__head span{
+  font-size:12px;color:var(--jade);font-variant-numeric:tabular-nums;letter-spacing:.02em;
+  transform:translateY(-30px);padding:2px 6px;border-radius:5px;background:rgba(57,221,169,.11);
+  border:1px solid rgba(57,221,169,.28);white-space:nowrap;
+}
+.ruler__head::before{content:"";position:absolute;bottom:0;left:0;width:1px;height:22px;background:var(--jade)}
+/* 命中率接近满格时把气泡翻到线左侧，避免它撑出容器（窄屏会因此横向滚动） */
+.ruler__head.is-end{align-items:flex-end;transform:translateX(-100%)}
+.ruler__head.is-end::before{left:auto;right:0}
+.ruler__cap{margin:12px 0 0;font-size:12.5px;color:var(--fg-3)}
+
+.tablewrap{
+  margin:22px 0 0;border:1px solid var(--line);border-radius:var(--r-lg);overflow:auto;
+  max-height:560px;background:rgba(6,12,10,.4);
+  scrollbar-color:rgba(214,240,228,.2) transparent;scrollbar-width:thin;
+}
+.tbl{border-collapse:separate;border-spacing:0;width:100%;font-size:13px}
+.tbl th,.tbl td{padding:9px 14px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--line-soft)}
+.tbl thead th{
+  position:sticky;top:0;z-index:2;background:#0B1913;color:var(--fg-2);
+  font-weight:500;font-size:12px;letter-spacing:.02em;border-bottom:1px solid var(--line);
+}
+.tbl thead th.is-code{color:var(--jade)}
+.tbl td{color:var(--fg-2)}
+.tbl td.is-code{color:var(--fg);font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+.tbl td.is-idx{color:var(--fg-3);font-variant-numeric:tabular-nums;width:1%}
+.tbl tbody tr:hover td{background:rgba(57,221,169,.05);color:var(--fg)}
+.tbl tbody tr:last-child td{border-bottom:0}
+.tbl .num{text-align:right;font-variant-numeric:tabular-nums}
+.tbl th.num{text-align:right}
+
+.more{display:flex;align-items:center;gap:14px;margin-top:14px;font-size:12.5px;color:var(--fg-3)}
+.ghost{
+  border:1px solid var(--line);border-radius:8px;padding:7px 14px;font-size:12.5px;color:var(--fg-2);
+  transition:border-color .2s,color .2s,background .2s;
+}
+.ghost:hover{border-color:var(--jade-line);color:var(--jade);background:rgba(57,221,169,.05)}
+
+/* 提示条 */
+.notice{
+  margin:22px 0 0;border:1px solid rgba(226,162,68,.32);border-radius:var(--r-md);
+  background:rgba(226,162,68,.06);padding:16px 18px;font-size:13.5px;line-height:1.7;color:var(--fg-2);
+}
+.notice b{color:var(--sand);font-weight:500;display:block;margin-bottom:4px;font-size:14px}
+.notice ul{margin:6px 0 0;padding-left:18px}
+.notice li{margin:2px 0}
+.notice--ok{border-color:rgba(57,221,169,.3);background:rgba(57,221,169,.05)}
+.notice--ok b{color:var(--jade)}
+
+/* 页脚 */
+.foot{margin-top:64px;padding-top:22px;border-top:1px solid var(--line-soft);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--fg-3)}
+.foot__k{display:flex;gap:20px;flex-wrap:wrap}
+
+/* toast */
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translate(-50%,16px);
+  background:rgba(19,37,29,.97);border:1px solid var(--line);border-radius:10px;
+  padding:11px 18px;font-size:13.5px;color:var(--fg);z-index:50;
+  box-shadow:0 20px 50px -24px #000;opacity:0;pointer-events:none;
+  transition:opacity .26s var(--ease),transform .26s var(--ease);max-width:min(90vw,560px);
+}
+.toast.is-on{opacity:1;transform:translate(-50%,0)}
+.toast b{color:var(--jade);font-weight:500}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes sweep{0%{left:-34%}100%{left:100%}}
+
+@media (max-width:1080px){
+  .bench__grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .console{grid-column:1/-1;flex-direction:row;flex-wrap:wrap;align-items:flex-end;gap:0 26px}
+  .console__title{width:100%}
+  .opt-list{margin-top:0}
+  .opt-list--write{margin-left:0}
+  .seg{margin:0}
+  .console__foot{margin:0;padding:0;flex:0 0 auto;width:220px;margin-left:auto}
+  .console__status{display:none}
+  .opt__text em{display:none}
+}
+@media (max-width:760px){
+  .wrap{padding:0 18px 64px}
+  .top{margin:0 -18px;padding:0 18px;height:62px}
+  .top__note{display:none}
+  .hero{padding:48px 0 34px}
+  .hero__lead{font-size:15.5px;margin-top:20px}
+  .bench{padding:14px;border-radius:18px}
+  .bench__grid{grid-template-columns:minmax(0,1fr);gap:12px}
+  .zone{min-height:0;padding:13px}
+  .console{flex-direction:column;align-items:stretch}
+  .console__foot{width:100%;margin:14px 0 0}
+  .figs{gap:10px 26px}
+  .fig__n{font-size:27px}
+  .tablewrap{max-height:420px}
+  .foot{flex-direction:column;gap:8px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <a class="brand" href="#">
+      <svg class="brand__mark" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+        <rect x="1.6" y="1.6" width="9.4" height="9.4" rx="1.6" stroke="currentColor" stroke-width="1.4" opacity=".55"/>
+        <rect x="15" y="1.6" width="9.4" height="9.4" rx="1.6" fill="currentColor" opacity=".9"/>
+        <rect x="1.6" y="15" width="9.4" height="9.4" rx="1.6" fill="currentColor" opacity=".9"/>
+        <rect x="15" y="15" width="9.4" height="9.4" rx="1.6" stroke="currentColor" stroke-width="1.4" opacity=".55"/>
+      </svg>
+      <span class="brand__name">料号比对</span>
+      <span class="brand__dot" aria-hidden="true"></span>
+    </a>
+    <p class="top__note">文件只在这台电脑的浏览器里处理 · <b>不会上传</b></p>
+  </header>
+
+  <section class="hero">
+    <h1 class="hero__title">把两份料号清单<br>对齐。</h1>
+    <p class="hero__lead">一份是物料编码清单（txt），一份是要筛的明细表（Excel，第一列是料号）。对得上的留下，对不上的也能单独拎出来，各导成一份新的 Excel；每一列原样保留。</p>
+    <div class="hero__rule" aria-hidden="true"></div>
+  </section>
+
+  <section class="bench" id="bench" aria-label="上传与比对">
+    <div class="bench__scan" aria-hidden="true"></div>
+    <div class="bench__grid">
+
+      <!-- 01 编码清单 -->
+      <div class="zone" id="zone-list">
+        <div class="zone__head">
+          <span class="zone__no">01</span>
+          <span class="zone__title">编码清单</span>
+          <span class="zone__spec">.txt / .csv</span>
+        </div>
+        <div class="zone__body">
+          <div class="drop" id="drop-list" role="button" tabindex="0" aria-label="选择物料编码清单文件">
+            <svg class="drop__art" viewBox="0 0 112 80" fill="none" aria-hidden="true">
+              <rect x="6.5" y="6.5" width="99" height="67" rx="9" stroke="currentColor" stroke-opacity=".22" stroke-dasharray="3 4"/>
+              <path d="M22 6.5v67" stroke="currentColor" stroke-opacity=".16"/>
+              <path d="M17 16h10M17 26h10M17 36h10M17 46h10M17 56h10M17 66h10" stroke="currentColor" stroke-opacity=".3" stroke-linecap="round"/>
+              <rect x="34" y="17" width="42" height="7" rx="2.5" fill="currentColor" fill-opacity=".5"/>
+              <rect x="34" y="31" width="58" height="7" rx="2.5" fill="currentColor" fill-opacity=".34"/>
+              <rect x="34" y="45" width="33" height="7" rx="2.5" fill="currentColor" fill-opacity=".24"/>
+              <rect x="34" y="59" width="49" height="7" rx="2.5" fill="currentColor" fill-opacity=".17"/>
+            </svg>
+            <p class="drop__title">把编码清单拖到这里</p>
+            <p class="drop__sub">一行一个料号，也可以用逗号或制表符隔开；UTF-8、GBK 都能读</p>
+          </div>
+
+          <div class="filed" id="filed-list" hidden>
+            <div class="filed__top">
+              <span class="filed__name" id="list-name"></span>
+              <button class="filed__swap" id="list-swap" type="button">换一个</button>
+            </div>
+            <dl class="filed__meta">
+              <div><dt>编码</dt><dd id="list-count">0</dd></div>
+              <div><dt>重复</dt><dd id="list-dups">0</dd></div>
+              <div><dt>文本编码</dt><dd id="list-enc">UTF-8</dd></div>
+            </dl>
+            <div class="filed__peek" id="list-peek"></div>
+          </div>
+          <p class="zone__err" id="list-err" hidden></p>
+        </div>
+        <input type="file" id="input-list" accept=".txt,.csv,text/plain" hidden>
+      </div>
+
+      <!-- 02 明细表 -->
+      <div class="zone" id="zone-table">
+        <div class="zone__head">
+          <span class="zone__no">02</span>
+          <span class="zone__title">明细表</span>
+          <span class="zone__spec">.xlsx / .xls / .csv</span>
+        </div>
+        <div class="zone__body">
+          <div class="drop" id="drop-table" role="button" tabindex="0" aria-label="选择 Excel 明细表文件">
+            <svg class="drop__art" viewBox="0 0 112 80" fill="none" aria-hidden="true">
+              <rect x="6.5" y="6.5" width="99" height="67" rx="9" stroke="currentColor" stroke-opacity=".22" stroke-dasharray="3 4"/>
+              <path d="M6.5 26.5h99M6.5 46.5h99M42.5 6.5v67M74.5 6.5v67" stroke="currentColor" stroke-opacity=".18"/>
+              <rect x="10" y="10" width="28" height="13" rx="2" fill="currentColor" fill-opacity=".18"/>
+              <rect x="46" y="10" width="24" height="13" rx="2" fill="currentColor" fill-opacity=".13"/>
+              <rect x="78" y="10" width="24" height="13" rx="2" fill="currentColor" fill-opacity=".13"/>
+              <rect x="10" y="30" width="28" height="13" rx="2" fill="currentColor" fill-opacity=".42"/>
+              <rect x="46" y="30" width="24" height="13" rx="2" fill="currentColor" fill-opacity=".2"/>
+              <rect x="78" y="30" width="24" height="13" rx="2" fill="currentColor" fill-opacity=".2"/>
+              <rect x="10" y="50" width="28" height="13" rx="2" fill="currentColor" fill-opacity=".13"/>
+              <rect x="46" y="50" width="24" height="13" rx="2" fill="currentColor" fill-opacity=".13"/>
+              <rect x="78" y="50" width="24" height="13" rx="2" fill="currentColor" fill-opacity=".13"/>
+            </svg>
+            <p class="drop__title">把明细表拖到这里</p>
+            <p class="drop__sub">第一列是物料编码，其余列随意，都会原样保留</p>
+          </div>
+
+          <div class="filed" id="filed-table" hidden>
+            <div class="filed__top">
+              <span class="filed__name" id="table-name"></span>
+              <button class="filed__swap" id="table-swap" type="button">换一个</button>
+            </div>
+            <dl class="filed__meta">
+              <div><dt>数据行</dt><dd id="table-count">0</dd></div>
+              <div><dt>列数</dt><dd id="table-cols">0</dd></div>
+              <div><dt>有效料号</dt><dd id="table-codes">0</dd></div>
+            </dl>
+            <div class="filed__ctl">
+              <label class="mini" id="sheet-wrap" hidden>
+                <span>工作表</span>
+                <select id="sheet-sel"></select>
+              </label>
+              <label class="mini"><input type="checkbox" id="opt-header" checked><span>首行是表头</span></label>
+            </div>
+            <div class="filed__peek" id="table-peek"></div>
+          </div>
+          <p class="zone__err" id="table-err" hidden></p>
+        </div>
+        <input type="file" id="input-table" accept=".xlsx,.xls,.xlsm,.csv" hidden>
+      </div>
+
+      <!-- 控制台 -->
+      <aside class="console">
+        <h2 class="console__title">比对设置</h2>
+        <div class="opt-list">
+          <label class="opt">
+            <input type="checkbox" id="opt-case" checked>
+            <span class="opt__ui" aria-hidden="true"></span>
+            <span class="opt__text"><b>忽略大小写</b><em>a001 与 A001 算同一个</em></span>
+          </label>
+          <label class="opt">
+            <input type="checkbox" id="opt-zero">
+            <span class="opt__ui" aria-hidden="true"></span>
+            <span class="opt__text"><b>忽略前导零</b><em>00123 与 123 算同一个</em></span>
+          </label>
+          <label class="opt">
+            <input type="checkbox" id="opt-space">
+            <span class="opt__ui" aria-hidden="true"></span>
+            <span class="opt__text"><b>忽略空格与分隔符</b><em>AB-01 与 AB01 算同一个</em></span>
+          </label>
+        </div>
+
+        <div class="seg" role="radiogroup" aria-label="输出范围">
+          <label><input type="radio" name="outmode" value="hit" checked><span>命中行</span></label>
+          <label><input type="radio" name="outmode" value="all"><span>全部行</span></label>
+          <label><input type="radio" name="outmode" value="miss"><span>未命中行</span></label>
+        </div>
+        <p class="seg-cap" id="seg-cap">只有料号对得上的行会写进结果表。</p>
+
+        <div class="console__foot">
+          <button class="cta" id="run" disabled type="button">
+            <svg class="cta__icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M2 8h9.5M8.5 4.5 12 8l-3.5 3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span id="run-label">开始比对</span>
+          </button>
+          <p class="console__status" id="status">还差 2 份文件</p>
+        </div>
+      </aside>
+
+    </div>
+  </section>
+
+  <section class="result" id="result" hidden aria-live="polite">
+    <div class="result__bar">
+      <div class="figs">
+        <div class="fig"><span class="fig__n fig__n--jade" id="n-rows">0</span><span class="fig__l" id="n-rows-l">行命中</span></div>
+        <div class="fig"><span class="fig__n" id="n-codes">0</span><span class="fig__l">命中的料号</span></div>
+        <div class="fig"><span class="fig__n" id="n-unused">0</span><span class="fig__l">清单里没出现的</span></div>
+        <div class="fig"><span class="fig__n" id="n-scan">0</span><span class="fig__l">扫描的明细行</span></div>
+      </div>
+      <button class="cta cta--sm" id="export" type="button">
+        <svg class="cta__icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M8 2v8m0 0 3-3m-3 3L5 7M2.5 12.5v1A1.5 1.5 0 0 0 4 15h8a1.5 1.5 0 0 0 1.5-1.5v-1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span id="export-label">导出 Excel</span>
+      </button>
+    </div>
+
+    <div class="ruler" aria-hidden="true">
+      <div class="ruler__ticks"></div>
+      <div class="ruler__fill" id="rfill"></div>
+      <div class="ruler__head" id="rhead"><span id="rpct">0%</span></div>
+    </div>
+    <p class="ruler__cap" id="rcap">清单里的料号，有多少在明细表里出现过</p>
+
+    <div class="notice" id="notice" hidden></div>
+
+    <div class="tablewrap" id="tablewrap" hidden>
+      <table class="tbl" id="tbl">
+        <thead id="tbl-head"></thead>
+        <tbody id="tbl-body"></tbody>
+      </table>
+    </div>
+    <div class="more" id="more-wrap" hidden>
+      <button class="ghost" id="more" type="button">再显示 100 行</button>
+      <span id="more-note"></span>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <div class="foot__k">
+      <span>全部计算在本页完成</span>
+      <span>不上传、不联网</span>
+      <span>刷新页面即清空</span>
+    </div>
+    <span>料号比对 · 本地版</span>
+  </footer>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<noscript><p style="padding:40px;text-align:center">这个页面需要启用 JavaScript 才能比对文件。</p></noscript>
+
+<!--@LIBS@-->
+<!--@APP@-->
+</body>
+</html>

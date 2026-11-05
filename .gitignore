@@ -1,0 +1,17 @@
+# 本地调试产物
+dev/_local/
+dev/shots/
+dev/_edgeprofile/
+dev/_edgeprofile_real/
+dev/_smokeprofile/
+dev/_sampleprofile/
+dev/_sampledl/
+dev/_shotprofile/
+dev/_sp2/
+dev/*.log
+
+# 系统垃圾
+Thumbs.db
+desktop.ini
+.DS_Store
+dev/_out_test.xlsx
