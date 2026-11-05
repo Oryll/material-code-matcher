@@ -515,8 +515,12 @@
   }
 
   function writeToHandle(handle, bytes) {
-    return handle.createWritable().then(function (w) {
-      return w.write(bytes).then(function () { return w.close(); });
+    /* 规范里 createWritable/write/close 都返回 Promise，这里仍容忍同步实现，
+       免得某个浏览器变体少返回一层 then 就把导出整个弄挂 */
+    return Promise.resolve(handle.createWritable()).then(function (w) {
+      return Promise.resolve(w.write(bytes)).then(function () {
+        return Promise.resolve(w.close());
+      });
     }).then(function () { return handle.name; });
   }
 

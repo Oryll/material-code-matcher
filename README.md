@@ -4,6 +4,11 @@
 
 把物料编码清单（txt）和明细表（Excel）丢进去，取出两边料号相同的行，导出成一个新的 Excel。**纯前端、单文件、断网可用**，文件不会离开这台电脑。
 
+打开方式（挑一个）：
+
+- 直接打开 **<https://oryll.github.io/material-code-matcher/>**，什么都不用装
+- 或者把仓库里的 `index.html` 下载到本地，双击
+
 ![界面截图](docs/screenshot.png)
 
 ## 为什么是单文件
@@ -112,6 +117,7 @@ dev/
   e2e.js             真实浏览器端到端 .... 79 项（CDP 驱动 Edge）
   smoke.js           产物冒烟 ........... 19 项
   solo_check.js      单文件自包含验证 ... 16 项
+  live_check.js      线上地址可用性验证 ... 15 项
   stress.js          压测
   make_samples.js    重新生成 samples/
 ```
