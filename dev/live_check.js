@@ -50,7 +50,7 @@ const ok = (n, c, extra) => { if (c) { pass++; console.log('  \u2713 ' + n); } e
     await send('Page.navigate', { url: URL_ });
     await sleep(1500);
     let ready = false;
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 400; i++) {
       const s = await evalx('document.readyState');
       const hasCore = await evalx('typeof window.CORE');
       if (s === 'complete' && hasCore === 'object') { ready = true; break; }

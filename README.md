@@ -117,7 +117,7 @@ dev/
   e2e.js             真实浏览器端到端 .... 79 项（CDP 驱动 Edge）
   smoke.js           产物冒烟 ........... 19 项
   solo_check.js      单文件自包含验证 ... 16 项
-  live_check.js      线上地址可用性验证 ... 15 项
+  live_check.js      线上地址可用性验证 ... 16 项
   stress.js          压测
   make_samples.js    重新生成 samples/
 ```
